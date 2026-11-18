@@ -1,0 +1,64 @@
+name: Update tracker
+
+on:
+  schedule:
+    - cron: "*/5 * * * *"   # every 5 minutes (GitHub runs these best-effort, often a few minutes late)
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ["site/**", "scripts/**", ".github/workflows/update.yml"]
+
+permissions:
+  contents: write   # push the rolling data branch
+  pages: write
+  id-token: write
+
+concurrency:
+  group: update
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Restore data from the data branch
+        run: |
+          mkdir -p data-out
+          if git ls-remote --exit-code --heads origin data >/dev/null 2>&1; then
+            git fetch --depth=1 origin data
+            git --work-tree=data-out checkout origin/data -- .
+            git reset -q
+          fi
+
+      - name: Pull AEMO data and rebuild estimates
+        env:
+          DATA_DIR: data-out
+        run: python3 scripts/update.py
+
+      - name: Save data branch (single rolling commit, no history growth)
+        working-directory: data-out
+        run: |
+          git init -q -b data
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -q -m "Data update $(date -u +%Y-%m-%dT%H:%MZ)"
+          git push -q -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" data
+
+      - name: Assemble site
+        run: |
+          rm -rf _site && cp -r site _site && cp -r data-out/data _site/data
+          touch _site/.nojekyll
+
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+      - id: deploy
+        uses: actions/deploy-pages@v4
