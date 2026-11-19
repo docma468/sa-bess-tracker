@@ -165,3 +165,12 @@ select { font: inherit; font-size: 14px; padding: 6px 10px; border-radius: 8px; 
 .tbl td.neg { color: var(--bad); }
 :root[data-theme="dark"] .tbl td.neg { color: #FF8A9A; }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .tbl td.neg { color: #FF8A9A; } }
+
+/* spot price panel */
+.pstats { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 8px; margin-bottom: 12px; }
+.pstat { background: var(--panel); border-radius: 10px; padding: 10px 12px; }
+.pstat b { display: block; font-size: 22px; font-weight: 600; color: var(--heading); letter-spacing: -0.01em; line-height: 1.15; }
+.pstat b small { font-size: 12px; font-weight: 600; color: var(--muted); letter-spacing: 0; }
+.pstat span { font-size: 12px; font-weight: 600; color: var(--muted); }
+.price-ctl { margin: 0 0 8px; }
+.price-ctl[hidden] { display: none; }
