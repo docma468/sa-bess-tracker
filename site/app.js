@@ -25,6 +25,11 @@
   const fFull = (ms) => dtf({ weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }).format(ms);
   const tzName = () => state.tz === "Australia/Brisbane" ? "NEM time" : "Adelaide time";
   function hoursLabel(h) { return h == null ? "–" : h >= 1 ? fmt(h, 1) + " h" : fmt(h * 60) + " min"; }
+  function money(v) {
+    if (v == null) return "–";
+    const a = Math.abs(v), sign = v < 0 ? "−" : "";
+    return a >= 1e6 ? `${sign}$${fmt(a / 1e6, 2)}m` : a >= 1e4 ? `${sign}$${fmt(a / 1e3, 0)}k` : a >= 1e3 ? `${sign}$${fmt(a / 1e3, 1)}k` : `${sign}$${fmt(a)}`;
+  }
   function fitClass(e) { return e == null ? ["–", ""] : e < 5 ? ["Good", "good"] : e <= 10 ? ["Fair", ""] : ["Low", "low"]; }
 
   // ------------------------------------------------------------ url state
@@ -135,7 +140,13 @@
   // ------------------------------------------------------------ rendering
   function renderHeader() {
     const age = (Date.now() - live.latest) / 60000;
-    $("#updated").innerHTML = `<span class="dot${age > 25 ? " stale" : ""}"></span>Data to <b>${fFull(live.latest)}</b> ${tzName()}`;
+    const at = (tz) => {
+      const d = new Intl.DateTimeFormat("en-AU", { timeZone: tz, weekday: "short", day: "numeric", month: "short" }).format(live.latest);
+      const h = new Intl.DateTimeFormat("en-AU", { timeZone: tz, hour12: false, hour: "2-digit", minute: "2-digit" }).format(live.latest);
+      return `<b><span class="dd">${d}, </span>${h}</b>`;
+    };
+    $("#updated").innerHTML = `<div><span class="dot${age > 25 ? " stale" : ""}"></span>Data to ${at("Australia/Brisbane")} NEM time</div>
+      <div>Data to ${at("Australia/Adelaide")} Adelaide time</div>`;
     $("#footReg").textContent = `Battery list: ${live.registry.source}. Page refreshes itself every 5 minutes.`;
   }
 
@@ -180,7 +191,7 @@
       c.strokeStyle = css("--muted"); c.setLineDash([3, 3]); c.lineWidth = 1;
       c.beginPath(); c.moveTo(x, top); c.lineTo(x, bottom); c.stroke();
       if (chart.canvas.id === "socChart") {
-        c.setLineDash([]); c.fillStyle = css("--muted"); c.font = "12px Inter, sans-serif"; c.textAlign = "left";
+        c.setLineDash([]); c.fillStyle = css("--heading"); c.font = "700 12px Inter, sans-serif"; c.textAlign = "left";
         c.fillText("now", x + 4, top + 12);
       }
       c.restore();
@@ -252,10 +263,10 @@
 
     const socData = {
       datasets: [
-        { label: "Actual SOC", data: pts(t, act), borderColor: marine, backgroundColor: marine, borderWidth: 2, pointRadius: 0, yAxisID: "y", spanGaps: false, order: 1 },
-        { label: "Estimated SOC", data: pts(t, est), borderColor: est_c, backgroundColor: est_c, borderWidth: 2, borderDash: [6, 4], pointRadius: 0, yAxisID: "y", order: 2 },
-        { label: "Spot price", data: pts(t, price), borderColor: priceC, backgroundColor: priceC, borderWidth: 1.2, pointRadius: 0, stepped: "before", yAxisID: "p", order: 3 },
-        { label: "Forecast price", data: fc.filter((p) => p[0] <= max).map((p) => ({ x: p[0], y: p[1] })), borderColor: priceC, backgroundColor: priceC, borderWidth: 1.6, borderDash: [2, 3], pointRadius: 0, stepped: "before", yAxisID: "p", order: 4 },
+        { label: "Actual SOC", data: pts(t, act), borderColor: marine, backgroundColor: marine, borderWidth: 3, pointRadius: 0, yAxisID: "y", spanGaps: false, order: 1 },
+        { label: "Estimated SOC", data: pts(t, est), borderColor: est_c, backgroundColor: est_c, borderWidth: 3, borderDash: [8, 5], pointRadius: 0, yAxisID: "y", order: 2 },
+        { label: "Spot price", data: pts(t, price), borderColor: priceC, backgroundColor: priceC, borderWidth: 2, pointRadius: 0, stepped: "before", yAxisID: "p", order: 3 },
+        { label: "Forecast price", data: fc.filter((p) => p[0] <= max).map((p) => ({ x: p[0], y: p[1] })), borderColor: priceC, backgroundColor: priceC, borderWidth: 2.5, borderDash: [3, 4], pointRadius: 0, stepped: "before", yAxisID: "p", order: 4 },
       ],
     };
     const tooltip = {
@@ -271,6 +282,9 @@
       },
       filter: (i) => i.parsed.y != null,
     };
+    Chart.defaults.font.family = "Inter, 'Helvetica Neue', Arial, sans-serif";
+    Chart.defaults.font.size = 12;
+    Chart.defaults.font.weight = "600";
     const base = {
       animation: false, responsive: true, maintainAspectRatio: false, parsing: false, normalized: true,
       interaction: { mode: "index", intersect: false },
@@ -280,16 +294,16 @@
       ...base,
       scales: {
         x: xScale(min, max),
-        y: { afterFit: (a) => { a.width = AXW; }, min: 0, max: 100, title: { display: true, text: "State of charge %", color: muted }, ticks: { color: muted, stepSize: 25 }, grid: { color: rule } },
-        p: { afterFit: (a) => { a.width = AXW; }, position: "right", min: pMin, max: pMax, title: { display: true, text: "$/MWh", color: muted }, ticks: { color: muted }, grid: { display: false } },
+        y: { afterFit: (a) => { a.width = AXW; }, min: 0, max: 100, title: { display: true, text: "State of charge %", color: marine, font: { weight: "700", size: 13 } }, ticks: { color: muted, stepSize: 25 }, grid: { color: rule } },
+        p: { afterFit: (a) => { a.width = AXW; }, position: "right", min: pMin, max: pMax, title: { display: true, text: "$/MWh", color: marine, font: { weight: "700", size: 13 } }, ticks: { color: muted }, grid: { display: false } },
       },
     };
     const dis = mw.map((v) => v == null ? null : Math.max(0, v));
     const chg = mw.map((v) => v == null ? null : Math.min(0, v));
     const mwData = {
       datasets: [
-        { label: "Discharging", data: pts(t, dis), borderColor: marine, backgroundColor: hexA(marine, 0.55), fill: "origin", borderWidth: 1, pointRadius: 0, stepped: "before", yAxisID: "m" },
-        { label: "Charging", data: pts(t, chg), borderColor: css("--cyan-dark"), backgroundColor: hexA(css("--cyan-dark"), 0.5), fill: "origin", borderWidth: 1, pointRadius: 0, stepped: "before", yAxisID: "m" },
+        { label: "Discharging", data: pts(t, dis), borderColor: marine, backgroundColor: hexA(marine, 0.55), fill: "origin", borderWidth: 2, pointRadius: 0, stepped: "before", yAxisID: "m" },
+        { label: "Charging", data: pts(t, chg), borderColor: css("--cyan-dark"), backgroundColor: hexA(css("--cyan-dark"), 0.5), fill: "origin", borderWidth: 2, pointRadius: 0, stepped: "before", yAxisID: "m" },
       ],
     };
     const mwOpts = {
@@ -297,7 +311,7 @@
       scales: {
         x: xScale(min, max),
         r: { position: "right", afterFit: (a) => { a.width = AXW; }, ticks: { display: false }, grid: { display: false }, border: { display: false } },
-        m: { afterFit: (a) => { a.width = AXW; }, title: { display: true, text: "MW (+ out, − in)", color: muted }, ticks: { color: muted }, grid: { color: (c) => c.tick.value === 0 ? muted : rule } },
+        m: { afterFit: (a) => { a.width = AXW; }, title: { display: true, text: "MW (+ out, − in)", color: marine, font: { weight: "700", size: 13 } }, ticks: { color: muted }, grid: { color: (c) => c.tick.value === 0 ? muted : rule } },
       },
     };
     if (socChart) socChart.destroy();
@@ -359,8 +373,24 @@
 
   function modeText(s) {
     if (s.mode === "idle") return "Idle";
-    const lim = s.hours_to_limit != null ? ` · ${s.mode === "charging" ? "full" : "empty"} in ${hoursLabel(s.hours_to_limit)}` : "";
-    return `${s.mode === "charging" ? "Charging" : "Discharging"} ${fmt(Math.abs(s.now_mw))} MW${lim}`;
+    return `${s.mode === "charging" ? "Charging" : "Discharging"} ${fmt(Math.abs(s.now_mw))} MW`;
+  }
+
+  function renderGlance() {
+    const top = live.summary.slice(0, 10);
+    $("#glance").innerHTML = top.map((s) => {
+      const soc = s.soc == null ? null : 100 * s.soc;
+      const arrow = s.mode === "discharging" ? '<i class="arrow up" title="Discharging">▲</i>' : s.mode === "charging" ? '<i class="arrow dn" title="Charging">▼</i>' : '<i class="arrow"></i>';
+      return `<button class="gbar" data-u="${esc(s.duid)}" title="${esc(s.name)}: ${soc == null ? "no data" : fmt(soc) + "%"}, ${fmt(s.now_mwh)} of ${fmt(s.mwh)} MWh">
+        <span class="gname">${esc(s.name)}</span>
+        <span class="gtrk"><i style="width:${soc == null ? 0 : Math.min(100, soc)}%"></i><em style="left:25%"></em><em style="left:50%"></em><em style="left:75%"></em></span>
+        <span class="gval">${arrow}<b>${soc == null ? "–" : fmt(soc) + "%"}</b><small>${fmt(s.now_mwh)} / ${fmt(s.mwh)} MWh</small></span>
+      </button>`;
+    }).join("");
+    document.querySelectorAll("#glance .gbar").forEach((b) => b.addEventListener("click", () => {
+      setView("unit", b.dataset.u);
+      $("#mainPanel").scrollIntoView({ behavior: "smooth", block: "start" });
+    }));
   }
 
   function renderTable() {
@@ -368,14 +398,13 @@
     tb.innerHTML = live.summary.map((s) => {
       const [fit, cls] = fitClass(s.typical_err_pct);
       const soc = s.soc == null ? null : 100 * s.soc;
-      const lim = s.hours_to_limit == null ? "–" : `${hoursLabel(s.hours_to_limit)} to ${s.mode === "charging" ? "full" : "empty"}`;
       return `<tr data-u="${esc(s.duid)}" class="${state.view === "unit" && state.unit === s.duid ? "sel" : ""}">
         <td><span class="nm">${esc(s.name)}</span><span class="duid">${esc(s.duid)}</span></td>
         <td class="num">${fmt(s.mw)}</td><td class="num">${fmt(s.mwh)}</td>
         <td><div class="socbar"><span class="trk"><i style="width:${soc == null ? 0 : Math.min(100, soc)}%"></i></span><b>${soc == null ? "–" : fmt(soc) + "%"}</b></div></td>
         <td class="num">${fmt(s.now_mw, 1)}</td>
         <td>${s.mode === "idle" ? "Idle" : s.mode === "charging" ? "Charging" : "Discharging"}</td>
-        <td class="num">${lim}</td>
+        <td class="num ${s.rev_24h != null && s.rev_24h < 0 ? "neg" : ""}">${money(s.rev_24h)}</td>
         <td><span class="pill ${cls}" title="Average gap to actual over 14 days: ${s.typical_err_pct ?? "–"}% of capacity">${fit}${s.typical_err_pct != null ? ` · ${fmt(s.typical_err_pct, 1)}%` : ""}</span></td>
       </tr>`;
     }).join("");
@@ -408,7 +437,7 @@
     writeHash();
     renderControls();
     renderHeader();
-    if (full) renderKPIs();
+    if (full) { renderKPIs(); renderGlance(); }
     renderTable();
     await renderCharts();
   }

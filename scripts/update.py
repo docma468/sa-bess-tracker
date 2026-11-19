@@ -517,6 +517,38 @@ def main():
             fleet["discharging_mw"] += mw_now
         else:
             fleet["charging_mw"] += mw_now or 0
+    # ---- estimated energy revenue over the last 24 hours: sum(MW x price x 5/60)
+    t_end = grid[-1]
+    t_from = t_end - 24 * 3600_000
+    mw_at, price_at = {}, {}
+    for p in day_files[-2:]:
+        d = load(p, {})
+        for i, pr in enumerate(d.get("price", [])):
+            t = d["start"] + i * STEP_MS
+            if t > t_from:
+                price_at[t] = pr
+                for duid, ser in d["units"].items():
+                    mw_at.setdefault(duid, {})[t] = ser["mw"][i]
+    for i, t in enumerate(grid):
+        if t > t_from:
+            if price.get(t) is not None:
+                price_at[t] = price.get(t)
+            for duid, ser in live_units.items():
+                if ser["mw"][i] is not None:
+                    mw_at.setdefault(duid, {})[t] = ser["mw"][i]
+    fleet["rev_24h"] = 0.0
+    for srow in summary:
+        m = mw_at.get(srow["duid"], {})
+        tot, n = 0.0, 0
+        for t, pr in price_at.items():
+            v = m.get(t)
+            if v is not None and pr is not None:
+                tot += v * pr * H
+                n += 1
+        srow["rev_24h"] = round(tot) if n >= 200 else None  # need most of the day to be meaningful
+        if srow["rev_24h"] is not None:
+            fleet["rev_24h"] += tot
+    fleet["rev_24h"] = round(fleet["rev_24h"])
     summary.sort(key=lambda s: -s["mwh"])
     fleet = {k: round(v, 1) for k, v in fleet.items()}
     fleet["soc"] = round(fleet["mwh"] / fleet["cap_mwh"], 4) if fleet["cap_mwh"] else None

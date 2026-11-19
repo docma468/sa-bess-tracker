@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>SA Battery Tracker</title>
+<title>SA Big Battery Tracker</title>
 <meta name="description" content="Live estimated state of charge for South Australia's grid-scale batteries, with AEMO spot and forecast prices. Updated every 5 minutes.">
 <link rel="icon" href="assets/favicon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -22,11 +22,19 @@
 <main class="wrap">
   <section class="hero">
     <p class="label">South Australia · grid-scale batteries</p>
-    <h1>How full are SA's big batteries right now?</h1>
+    <h1>SA Big Battery Tracker</h1>
     <p class="intro">Estimated state of charge for every grid-connected battery in SA of 5 MW or more, built from public AEMO data and refreshed every 5 minutes.</p>
   </section>
 
   <section class="modules" id="kpis" aria-label="Fleet summary"></section>
+
+  <section class="panel" id="glancePanel">
+    <div class="panel-head">
+      <div><h2>Top 10 at a glance</h2><p class="sub">State of charge now for the ten largest batteries by storage size. Click a bar to chart that battery.</p></div>
+      <div class="legend"><span><i class="arrow up">▲</i>Discharging</span><span><i class="arrow dn">▼</i>Charging</span></div>
+    </div>
+    <div class="glance" id="glance"></div>
+  </section>
 
   <section class="controls" aria-label="Chart controls">
     <div class="ctl">
@@ -79,7 +87,7 @@
       <table class="tbl" id="tbl">
         <thead><tr>
           <th>Battery</th><th class="num">MW</th><th class="num">MWh</th><th>State of charge</th>
-          <th class="num">Now (MW)</th><th>Doing</th><th class="num">Time to full / empty</th><th>Model fit</th>
+          <th class="num">Now (MW)</th><th>Current status</th><th class="num" title="Estimated energy revenue, last 24 hours">Revenue 24h</th><th>Model fit</th>
         </tr></thead>
         <tbody></tbody>
       </table>
@@ -114,6 +122,7 @@
           <li>SCADA is a snapshot each 5 minutes, so fast FCAS and regulation movements in between are missed.</li>
           <li>Some sites report stored energy unevenly, which shows up as a low model fit.</li>
           <li>Usable capacity is the larger of the registered MWh and the most energy AEMO has ever reported for that battery.</li>
+          <li><b>Revenue 24h</b> is energy market revenue only: each 5-minute MW &times; the SA dispatch price, summed over the last 24 hours (charging costs count as negative). It's a rolling window, so a battery that charged this morning and hasn't discharged yet can show a loss. It leaves out FCAS, loss factors, network charges and contracts, so treat it as a rough guide.</li>
           <li>Updates run on GitHub's scheduler and can land a few minutes late.</li>
         </ul>
       </div>
