@@ -174,3 +174,4 @@ select { font: inherit; font-size: 14px; padding: 6px 10px; border-radius: 8px; 
 .pstat span { font-size: 12px; font-weight: 600; color: var(--muted); }
 .price-ctl { margin: 0 0 8px; }
 .price-ctl[hidden] { display: none; }
+.gname small { display: block; font-size: 12px; font-weight: 600; color: var(--muted); line-height: 1.3; }
