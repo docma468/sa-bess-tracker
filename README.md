@@ -1,4 +1,4 @@
-# SA Battery Tracker
+# SA Big Battery Tracker
 
 A public web page showing the estimated state of charge (SOC) of every grid-scale battery in South Australia (bidirectional units of 5 MW or more), with SA spot and AEMO forecast prices. It refreshes every 5 minutes and keeps 31 days of history.
 
