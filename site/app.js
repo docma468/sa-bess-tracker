@@ -236,6 +236,20 @@
     return 10 * mag;
   }
 
+  // fit a price axis to the data: actual min and max, a little padding, rounded to a tidy step
+  function priceRange(vals) {
+    const v = vals.filter((x) => x != null && isFinite(x));
+    if (!v.length) return { min: 0, max: 100 };
+    const lo = Math.min(...v), hi = Math.max(...v);
+    const span = hi - lo || Math.max(10, Math.abs(hi) * 0.2);
+    const pad = span * 0.06;
+    const step = niceCeil(span / 10);
+    let min = Math.floor((lo - pad) / step) * step;
+    const max = Math.ceil((hi + pad) / step) * step;
+    if (lo >= 0 && min < 0) min = 0;
+    return { min, max };
+  }
+
   async function renderPrice() {
     const dayList = await ensureDays(24);
     const S = buildSeries(dayList);
@@ -279,14 +293,15 @@
 
     // axis: full range by default; when there are spikes, offer a zoom to normal prices
     const vals = [...act, ...fc].map((p) => p.y);
-    const vmax = vals.length ? Math.max(...vals) : 100, vmin = vals.length ? Math.min(...vals) : 0;
+    const vmax = vals.length ? Math.max(...vals) : 100;
     const normal = act.map((p) => p.y).sort((a, b) => a - b);
     const p90 = normal.length ? normal[Math.floor(0.9 * (normal.length - 1))] : 100;
     const zoomCap = Math.max(300, Math.ceil((p90 * 2) / 100) * 100);
     const canZoom = vmax > zoomCap * 1.5;
     const zoom = canZoom && state.priceZoom;
-    const yMax = zoom ? zoomCap : Math.max(100, niceCeil(vmax * 1.05));
-    const yMin = Math.min(0, Math.floor(vmin / 50) * 50);
+    const fit = priceRange(vals);
+    const yMax = zoom ? zoomCap : fit.max;
+    const yMin = fit.min;
     $("#priceZoom").hidden = !canZoom;
     document.querySelectorAll("#priceZoom button").forEach((b) => b.classList.toggle("on", (b.dataset.z === "1") === zoom));
     $("#priceNote").textContent = zoom ? `Zoomed to $${fmt(zoomCap)}. Prices above that run off the top (peak $${fmt(vmax)}). Hover for values.` : "";
@@ -343,11 +358,7 @@
 
     const pts = (xs, ys) => xs.map((x, i) => ({ x, y: ys[i] == null ? null : +ys[i].toFixed(2) }));
     const priceVals = price.filter((v) => v != null).concat(fc.filter((p) => p[0] <= max).map((p) => p[1]));
-    // keep price axis readable: clip extreme spikes, they still show in the tooltip
-    const sorted = [...priceVals].sort((a, b) => a - b);
-    const q = (p) => sorted.length ? sorted[Math.min(sorted.length - 1, Math.floor(p * sorted.length))] : 0;
-    const pMax = Math.max(100, Math.ceil(q(0.98) / 50) * 50 + 50);
-    const pMin = Math.min(0, Math.floor(q(0.01) / 50) * 50);
+    const { min: pMin, max: pMax } = priceRange(priceVals);
 
     const socData = {
       datasets: [
