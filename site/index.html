@@ -36,6 +36,20 @@
     <div class="glance" id="glance"></div>
   </section>
 
+  <section class="panel" id="pricePanel">
+    <div class="panel-head">
+      <div><h2>SA spot price</h2><p class="sub" id="priceSub">Last 24 hours and AEMO's forecast</p></div>
+      <div class="legend" id="priceLegend"></div>
+    </div>
+    <div class="pstats" id="pstats"></div>
+    <div class="ctl price-ctl" id="priceZoom" hidden>
+      <span class="label">Scale</span>
+      <div class="seg"><button data-z="0" class="on">Full range</button><button data-z="1">Zoom to normal prices</button></div>
+    </div>
+    <div class="chart-box tall"><canvas id="priceChart"></canvas></div>
+    <p class="sub" id="priceNote"></p>
+  </section>
+
   <section class="controls" aria-label="Chart controls">
     <div class="ctl">
       <span class="label">View</span>

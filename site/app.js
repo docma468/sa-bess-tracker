@@ -4,10 +4,10 @@
   const STEP = 300000;
   const HOUR = 3600000;
   const AXW = window.innerWidth < 600 ? 46 : 66;
-  const state = { view: "fleet", unit: null, hours: 24, tz: "Australia/Brisbane" };
+  const state = { view: "fleet", unit: null, hours: 24, tz: "Australia/Brisbane", priceZoom: false };
   const days = new Map();       // date -> day json
   let index = null, live = null;
-  let socChart = null, mwChart = null;
+  let socChart = null, mwChart = null, priceChart = null;
 
   // ------------------------------------------------------------ utils
   const $ = (s) => document.querySelector(s);
@@ -190,7 +190,7 @@
       const c = chart.ctx; c.save();
       c.strokeStyle = css("--muted"); c.setLineDash([3, 3]); c.lineWidth = 1;
       c.beginPath(); c.moveTo(x, top); c.lineTo(x, bottom); c.stroke();
-      if (chart.canvas.id === "socChart") {
+      if (chart.canvas.id === "socChart" || chart.canvas.id === "priceChart") {
         c.setLineDash([]); c.fillStyle = css("--heading"); c.font = "700 12px Inter, sans-serif"; c.textAlign = "left";
         c.fillText("now", x + 4, top + 12);
       }
@@ -228,6 +228,94 @@
     const g = (k) => +p.find((x) => x.type === k).value;
     const asUTC = Date.UTC(g("year"), g("month") - 1, g("day"), g("hour") % 24, g("minute"));
     return asUTC - Math.floor(ms / 60000) * 60000;
+  }
+
+  function niceCeil(v) {
+    const mag = Math.pow(10, Math.floor(Math.log10(Math.max(1, v))));
+    for (const m of [1, 1.5, 2, 2.5, 3, 4, 5, 6, 8, 10]) if (m * mag >= v) return m * mag;
+    return 10 * mag;
+  }
+
+  async function renderPrice() {
+    const dayList = await ensureDays(24);
+    const S = buildSeries(dayList);
+    const from = live.latest - 24 * HOUR;
+    const act = [];
+    S.t.forEach((t, i) => { if (t >= from && S.price[i] != null) act.push({ x: t, y: S.price[i] }); });
+    const f = live.forecast || {};
+    const nowP = act.length ? act[act.length - 1] : null;
+    let p5 = (f.p5 || []).filter((p) => p[0] > live.latest).map((p) => ({ x: p[0], y: p[1] }));
+    const p5End = p5.length ? p5[p5.length - 1].x : live.latest;
+    let pd = (f.pd || []).filter((p) => p[0] >= p5End).map((p) => ({ x: p[0], y: p[1] }));
+    // join each forecast line to the line before it
+    if (nowP) p5 = [nowP, ...p5];
+    if (p5.length && pd.length) pd = [p5[p5.length - 1], ...pd];
+    else if (nowP && pd.length) pd = [nowP, ...pd];
+    const end = pd.length ? pd[pd.length - 1].x + 30 * 60000 : (p5.length ? p5[p5.length - 1].x + STEP : live.latest + HOUR);
+
+    // stats
+    const mean = (a) => a.length ? a.reduce((x, p) => x + p.y, 0) / a.length : null;
+    const fc = [...p5.slice(1), ...pd.slice(1)];
+    const hi = fc.length ? fc.reduce((m, p) => p.y > m.y ? p : m) : null;
+    const lo = fc.length ? fc.reduce((m, p) => p.y < m.y ? p : m) : null;
+    const nextHour = p5.slice(1);
+    const stat = (v, label) => `<div class="pstat"><b>${v}</b><span>${label}</span></div>`;
+    const $p = (v) => v == null ? "–" : (v < 0 ? "−$" : "$") + fmt(Math.abs(v));
+    $("#pstats").innerHTML =
+      stat($p(nowP && nowP.y), "Now, $/MWh") +
+      stat($p(mean(act)), "Last 24h average") +
+      stat($p(mean(nextHour)), "Next hour forecast avg") +
+      stat(hi ? `${$p(hi.y)} <small>at ${fTime(hi.x)}</small>` : "–", "Forecast high") +
+      stat(lo ? `${$p(lo.y)} <small>at ${fTime(lo.x)}</small>` : "–", "Forecast low");
+
+    const marine = css("--heading"), est_c = css("--line-est"), teal = css("--teal"), muted = css("--muted"), rule = css("--rule");
+    const pdC = css("--price");
+    $("#priceLegend").innerHTML = `
+      <span><i class="sw" style="border-color:${marine}"></i>Dispatch price</span>
+      <span><i class="sw dash" style="border-color:${est_c}"></i>5-min forecast (next hour)</span>
+      <span><i class="sw dot" style="border-color:${pdC}"></i>30-min pre-dispatch</span>`;
+    const run = f.pd_run ? ` · pre-dispatch run ${fTime(f.pd_run)}` : "";
+    $("#priceSub").textContent = `Last 24 hours and AEMO's forecast to ${fFull(end - 30 * 60000)} · ${tzName()}${run}`;
+
+    // axis: full range by default; when there are spikes, offer a zoom to normal prices
+    const vals = [...act, ...fc].map((p) => p.y);
+    const vmax = vals.length ? Math.max(...vals) : 100, vmin = vals.length ? Math.min(...vals) : 0;
+    const normal = act.map((p) => p.y).sort((a, b) => a - b);
+    const p90 = normal.length ? normal[Math.floor(0.9 * (normal.length - 1))] : 100;
+    const zoomCap = Math.max(300, Math.ceil((p90 * 2) / 100) * 100);
+    const canZoom = vmax > zoomCap * 1.5;
+    const zoom = canZoom && state.priceZoom;
+    const yMax = zoom ? zoomCap : Math.max(100, niceCeil(vmax * 1.05));
+    const yMin = Math.min(0, Math.floor(vmin / 50) * 50);
+    $("#priceZoom").hidden = !canZoom;
+    document.querySelectorAll("#priceZoom button").forEach((b) => b.classList.toggle("on", (b.dataset.z === "1") === zoom));
+    $("#priceNote").textContent = zoom ? `Zoomed to $${fmt(zoomCap)}. Prices above that run off the top (peak $${fmt(vmax)}). Hover for values.` : "";
+
+    const opts = {
+      animation: false, responsive: true, maintainAspectRatio: false, parsing: false, normalized: true,
+      interaction: { mode: "nearest", axis: "x", intersect: false },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            title: (items) => items.length ? fFull(items[0].parsed.x) : "",
+            label: (c) => `${c.dataset.label}: $${fmt(c.parsed.y, 2)}/MWh`,
+          },
+        },
+      },
+      scales: {
+        x: xScale(from, end),
+        y: { afterFit: (a) => { a.width = AXW; }, min: yMin, max: yMax, title: { display: true, text: "$/MWh", color: marine, font: { weight: "700", size: 13 } },
+             ticks: { color: muted, callback: (v) => Math.abs(v) >= 1000 ? `${v < 0 ? "−" : ""}$${fmt(Math.abs(v) / 1000, Math.abs(v) % 1000 ? 1 : 0)}k` : `${v < 0 ? "−" : ""}$${fmt(Math.abs(v))}` }, grid: { color: (c) => c.tick.value === 0 ? muted : rule } },
+      },
+    };
+    const data = { datasets: [
+      { label: "Dispatch price", data: act, borderColor: marine, backgroundColor: hexA(marine, 0.08), fill: "origin", borderWidth: 2.5, pointRadius: 0, stepped: "before" },
+      { label: "5-min forecast", data: p5, borderColor: est_c, borderWidth: 3, borderDash: [8, 5], pointRadius: 0, stepped: "before" },
+      { label: "Pre-dispatch", data: pd, borderColor: pdC, borderWidth: 3, borderDash: [3, 4], pointRadius: 0, stepped: "before" },
+    ] };
+    if (priceChart) priceChart.destroy();
+    priceChart = new Chart($("#priceChart"), { type: "line", data, options: opts, plugins: [nowLine] });
   }
 
   async function renderCharts() {
@@ -440,6 +528,7 @@
     if (full) { renderKPIs(); renderGlance(); }
     renderTable();
     await renderCharts();
+    await renderPrice();
   }
 
   // ------------------------------------------------------------ boot
@@ -452,6 +541,7 @@
     $("#rangeSeg").addEventListener("click", (e) => { const b = e.target.closest("button"); if (b) { state.hours = +b.dataset.h; renderAll(false); } });
     $("#tzSeg").addEventListener("click", (e) => { const b = e.target.closest("button"); if (b) { state.tz = b.dataset.tz; renderAll(false); } });
     $("#unitSel").addEventListener("change", (e) => setView("unit", e.target.value));
+    $("#priceZoom").addEventListener("click", (e) => { const b = e.target.closest("button"); if (b) { state.priceZoom = b.dataset.z === "1"; renderPrice(); } });
     matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => renderAll(false));
     setInterval(async () => {
       try {
