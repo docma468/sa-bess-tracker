@@ -162,3 +162,6 @@ select { font: inherit; font-size: 14px; padding: 6px 10px; border-radius: 8px; 
 @media (max-width: 600px) { .gbar { grid-template-columns: 1fr auto; gap: 4px 10px; } .gtrk { grid-column: 1 / -1; grid-row: 2; height: 16px; } .gval small { display: none; } }
 
 @media (max-width: 600px) { .bar-meta { font-size: 12px; } .bar-meta .dd { display: none; } .logo { height: 28px; } }
+.tbl td.neg { color: var(--bad); }
+:root[data-theme="dark"] .tbl td.neg { color: #FF8A9A; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .tbl td.neg { color: #FF8A9A; } }

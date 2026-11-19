@@ -87,7 +87,7 @@
       <table class="tbl" id="tbl">
         <thead><tr>
           <th>Battery</th><th class="num">MW</th><th class="num">MWh</th><th>State of charge</th>
-          <th class="num">Now (MW)</th><th>Doing</th><th>Model fit</th>
+          <th class="num">Now (MW)</th><th>Current status</th><th class="num" title="Estimated energy revenue, last 24 hours">Revenue 24h</th><th>Model fit</th>
         </tr></thead>
         <tbody></tbody>
       </table>
@@ -122,6 +122,7 @@
           <li>SCADA is a snapshot each 5 minutes, so fast FCAS and regulation movements in between are missed.</li>
           <li>Some sites report stored energy unevenly, which shows up as a low model fit.</li>
           <li>Usable capacity is the larger of the registered MWh and the most energy AEMO has ever reported for that battery.</li>
+          <li><b>Revenue 24h</b> is energy market revenue only: each 5-minute MW &times; the SA dispatch price, summed over the last 24 hours (charging costs count as negative). It's a rolling window, so a battery that charged this morning and hasn't discharged yet can show a loss. It leaves out FCAS, loss factors, network charges and contracts, so treat it as a rough guide.</li>
           <li>Updates run on GitHub's scheduler and can land a few minutes late.</li>
         </ul>
       </div>

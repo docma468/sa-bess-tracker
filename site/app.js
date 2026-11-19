@@ -25,6 +25,11 @@
   const fFull = (ms) => dtf({ weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }).format(ms);
   const tzName = () => state.tz === "Australia/Brisbane" ? "NEM time" : "Adelaide time";
   function hoursLabel(h) { return h == null ? "–" : h >= 1 ? fmt(h, 1) + " h" : fmt(h * 60) + " min"; }
+  function money(v) {
+    if (v == null) return "–";
+    const a = Math.abs(v), sign = v < 0 ? "−" : "";
+    return a >= 1e6 ? `${sign}$${fmt(a / 1e6, 2)}m` : a >= 1e4 ? `${sign}$${fmt(a / 1e3, 0)}k` : a >= 1e3 ? `${sign}$${fmt(a / 1e3, 1)}k` : `${sign}$${fmt(a)}`;
+  }
   function fitClass(e) { return e == null ? ["–", ""] : e < 5 ? ["Good", "good"] : e <= 10 ? ["Fair", ""] : ["Low", "low"]; }
 
   // ------------------------------------------------------------ url state
@@ -399,6 +404,7 @@
         <td><div class="socbar"><span class="trk"><i style="width:${soc == null ? 0 : Math.min(100, soc)}%"></i></span><b>${soc == null ? "–" : fmt(soc) + "%"}</b></div></td>
         <td class="num">${fmt(s.now_mw, 1)}</td>
         <td>${s.mode === "idle" ? "Idle" : s.mode === "charging" ? "Charging" : "Discharging"}</td>
+        <td class="num ${s.rev_24h != null && s.rev_24h < 0 ? "neg" : ""}">${money(s.rev_24h)}</td>
         <td><span class="pill ${cls}" title="Average gap to actual over 14 days: ${s.typical_err_pct ?? "–"}% of capacity">${fit}${s.typical_err_pct != null ? ` · ${fmt(s.typical_err_pct, 1)}%` : ""}</span></td>
       </tr>`;
     }).join("");
