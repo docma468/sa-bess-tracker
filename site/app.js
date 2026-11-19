@@ -472,7 +472,7 @@
       return `<button class="gbar" data-u="${esc(s.duid)}" title="${esc(s.name)}: ${soc == null ? "no data" : fmt(soc) + "%"}, ${fmt(s.now_mwh)} of ${fmt(s.mwh)} MWh">
         <span class="gname">${esc(s.name)}<small>${fmt(s.mw)} MW / ${fmt(s.mwh)} MWh</small></span>
         <span class="gtrk"><i style="width:${soc == null ? 0 : Math.min(100, soc)}%"></i><em style="left:25%"></em><em style="left:50%"></em><em style="left:75%"></em></span>
-        <span class="gval">${arrow}<b>${soc == null ? "–" : fmt(soc) + "%"}</b><small>${fmt(s.now_mwh)} / ${fmt(s.mwh)} MWh</small></span>
+        <span class="gval">${arrow}<b>${soc == null ? "–" : fmt(soc) + "%"}</b></span>
       </button>`;
     }).join("");
     document.querySelectorAll("#glance .gbar").forEach((b) => b.addEventListener("click", () => {
