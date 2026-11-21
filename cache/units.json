@@ -1,0 +1,171 @@
+{
+ "refreshed": "2026-11-19T10:02:03+10:00",
+ "source": "AEMO MMSDM 2026-10",
+ "units": {
+  "BLYTHB1": {
+   "duid": "BLYTHB1",
+   "station": "BLYTHB",
+   "name": "Blyth",
+   "participant": "BLYTHBAT",
+   "mw": 200.0,
+   "mwh": 400.0,
+   "reg_mwh": 400.0,
+   "eff_in": 0.94,
+   "eff_out": 0.94
+  },
+  "BUNGAMB1": {
+   "duid": "BUNGAMB1",
+   "station": "BUNGAMB1",
+   "name": "Bungama",
+   "participant": "BUNGBESS",
+   "mw": 150.0,
+   "mwh": 300.0,
+   "reg_mwh": 300.0,
+   "eff_in": 0.91,
+   "eff_out": 0.91
+  },
+  "CGBESS01": {
+   "duid": "CGBESS01",
+   "station": "CGBESS",
+   "name": "Clements Gap",
+   "participant": "CGBESS",
+   "mw": 60.0,
+   "mwh": 120.0,
+   "reg_mwh": 120.0,
+   "eff_in": 0.88,
+   "eff_out": 0.88
+  },
+  "DALNTH1": {
+   "duid": "DALNTH1",
+   "station": "DALNTH",
+   "name": "Dalrymple North",
+   "participant": "DALRYMPN",
+   "mw": 30.0,
+   "mwh": 12.2,
+   "reg_mwh": 12.2,
+   "eff_in": 0.84,
+   "eff_out": 0.98
+  },
+  "HPR1": {
+   "duid": "HPR1",
+   "station": "HORNSDPR",
+   "name": "Hornsdale Power Reserve",
+   "participant": "HORNSPR",
+   "mw": 150.0,
+   "mwh": 194.0,
+   "reg_mwh": 194.0,
+   "eff_in": 1.0,
+   "eff_out": 1.0
+  },
+  "LBB1": {
+   "duid": "LBB1",
+   "station": "LBBESS",
+   "name": "Lake Bonney BESS1",
+   "participant": "LKBWFBES",
+   "mw": 25.0,
+   "mwh": 52.0,
+   "reg_mwh": 52.0,
+   "eff_in": 0.93,
+   "eff_out": 0.93
+  },
+  "LGAPBS1": {
+   "duid": "LGAPBS1",
+   "station": "LGAPWF1",
+   "name": "Lincoln Gap Wind Farm",
+   "participant": "LINGAPWF",
+   "mw": 9.0,
+   "mwh": 10.0,
+   "reg_mwh": 10.0,
+   "eff_in": 0.85,
+   "eff_out": 0.85
+  },
+  "MANNUMB1": {
+   "duid": "MANNUMB1",
+   "station": "MANNUMB1",
+   "name": "Mannum",
+   "participant": "MANNUMB",
+   "mw": 100.0,
+   "mwh": 200.0,
+   "reg_mwh": 200.0,
+   "eff_in": 0.9133,
+   "eff_out": 0.9133
+  },
+  "TB2B1": {
+   "duid": "TB2B1",
+   "station": "TB2HYB",
+   "name": "Tailem Bend 2 Hybrid Renewable Power Station",
+   "participant": "TAILEM",
+   "mw": 41.0,
+   "mwh": 41.0,
+   "reg_mwh": 41.0,
+   "eff_in": 0.927,
+   "eff_out": 0.927
+  },
+  "TIB1": {
+   "duid": "TIB1",
+   "station": "TIBESS",
+   "name": "Torrens Island",
+   "participant": "TIPSCO",
+   "mw": 250.0,
+   "mwh": 250.0,
+   "reg_mwh": 250.0,
+   "eff_in": 0.84,
+   "eff_out": 0.97
+  },
+  "SMFBESS1": {
+   "duid": "SMFBESS1",
+   "station": "SMFBESS1",
+   "name": "Summerfield BESS1",
+   "participant": "SMFBESS",
+   "mw": 120.0,
+   "mwh": 480.0,
+   "reg_mwh": 480.0,
+   "eff_in": 0.93,
+   "eff_out": 0.93
+  },
+  "SMFBESS2": {
+   "duid": "SMFBESS2",
+   "station": "SMFBESS2",
+   "name": "Summerfield BESS2",
+   "participant": "SMFBESS",
+   "mw": 120.0,
+   "mwh": 480.0,
+   "reg_mwh": 480.0,
+   "eff_in": 0.93,
+   "eff_out": 0.93
+  },
+  "ADPBA1": {
+   "duid": "ADPBA1",
+   "station": "ADP",
+   "name": "Adelaide Desalination Plant",
+   "participant": "SAWCML",
+   "mw": 6.0,
+   "mwh": 6.0,
+   "reg_mwh": 6.0,
+   "eff_in": 0.92,
+   "eff_out": 0.92
+  },
+  "TB3B1": {
+   "duid": "TB3B1",
+   "station": "TB3BESS",
+   "name": "Tailem Bend 3",
+   "participant": "TBBESS",
+   "mw": 204.0,
+   "mwh": 408.0,
+   "reg_mwh": 408.0,
+   "eff_in": 0.9213,
+   "eff_out": 0.9213
+  },
+  "TEMPB1": {
+   "duid": "TEMPB1",
+   "station": "TEMPBESS",
+   "name": "Templers",
+   "participant": "DIAMTEMP",
+   "mw": 111.0,
+   "mwh": 285.0,
+   "reg_mwh": 285.0,
+   "eff_in": 0.83,
+   "eff_out": 1.0
+  }
+ }
+}
